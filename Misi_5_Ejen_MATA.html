@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Misi 5 - Ejen MATA</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ color:white;
+ text-align:center;
+ background:radial-gradient(circle at top,#2859ce,#101849 65%,#080e28);
+ min-height:100vh
+}
+header{
+ padding:15px;
+ background:#101b52;
+ border-bottom:3px solid #36dcff;
+ display:flex;
+ justify-content:space-around;
+ flex-wrap:wrap;
+ gap:10px;
+ font-weight:bold
+}
+h1{
+ color:#ffdc43;
+ text-shadow:0 3px #a43a6a;
+ font-size:clamp(25px,5vw,48px)
+}
+h2{color:#57e8ff}
+main{max-width:1050px;margin:auto;padding:18px}
+.screen{display:none}
+.screen.active{display:block}
+.panel{
+ background:#192961ee;
+ border:2px solid #537fff;
+ border-radius:23px;
+ padding:22px;
+ margin:18px auto;
+ box-shadow:0 0 25px #246aff55
+}
+button{
+ cursor:pointer;
+ color:white;
+ font-size:17px;
+ font-weight:bold;
+ border:0;
+ border-radius:15px;
+ padding:15px;
+ margin:6px;
+ background:linear-gradient(135deg,#fc9a29,#f04464);
+ box-shadow:0 5px 0 #85264b
+}
+button:active{
+ transform:translateY(4px);
+ box-shadow:none
+}
+button:disabled{opacity:.4;cursor:default}
+.secondary{
+ background:linear-gradient(135deg,#286cff,#923dff)
+}
+.grid{
+ display:grid;
+ grid-template-columns:repeat(3,1fr);
+ gap:10px
+}
+.item{
+ background:#314887;
+ border:3px solid #677abe;
+ border-radius:18px;
+ padding:15px;
+ cursor:pointer;
+ min-height:125px;
+ display:flex;
+ flex-direction:column;
+ justify-content:center;
+ gap:8px;
+ color:white
+}
+.item.selected{
+ border-color:#ffde34;
+ background:#57518c
+}
+.emoji{font-size:45px}
+.slot{
+ border:3px dashed #61d9ff;
+ border-radius:15px;
+ padding:18px;
+ min-height:110px;
+ background:#17225a
+}
+#track{
+ width:100%;
+ height:290px;
+ position:relative;
+ overflow:hidden;
+ border-radius:20px;
+ border:3px solid #53dfff;
+ background:linear-gradient(
+ #3e8ed4 0 60%,
+ #385584 60% 80%,
+ #152a56 80%
+ )
+}
+#ground{
+ position:absolute;
+ bottom:42px;
+ height:6px;
+ background:#45ecff;
+ width:100%;
+ box-shadow:0 0 18px cyan
+}
+#agent{
+ position:absolute;
+ left:14%;
+ bottom:48px;
+ width:55px;
+ height:70px;
+ font-size:49px;
+ z-index:2
+}
+.hurdle{
+ position:absolute;
+ bottom:48px;
+ width:35px;
+ height:48px;
+ background:linear-gradient(90deg,#ff7134,#ffbc37);
+ border:3px solid white;
+ border-radius:6px
+}
+.answer{
+ display:block;
+ width:95%;
+ max-width:650px;
+ margin:10px auto;
+ background:#324db0
+}
+#feedback{
+ font-size:20px;
+ font-weight:bold;
+ color:#ffe65a;
+ min-height:32px
+}
+#progress{
+ height:10px;
+ background:#102053;
+ overflow:hidden
+}
+#progressBar{
+ height:100%;
+ width:0;
+ background:linear-gradient(90deg,#17e6fa,#ff50d1);
+ transition:width .3s
+}
+#team{
+ padding:13px;
+ border-radius:12px;
+ border:0;
+ max-width:90%;
+ font-size:16px
+}
+@media(max-width:600px){
+ .grid{grid-template-columns:repeat(2,1fr)}
+ .panel{padding:13px}
+ .item{min-height:110px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+ <span>🛡️ AKADEMI EJEN MATA</span>
+ <span>⭐ MARKAH: <b id="score">0</b>/100</span>
+</header>
+
+<div id="progress">
+ <div id="progressBar"></div>
+</div>
+
+<main>
+
+<!-- MUKA DEPAN -->
+
+<section class="screen active" id="home">
+ <div class="panel">
+  <h1>🎮 MISI 5</h1>
+  <h2>KERJASAMA PASUKAN</h2>
+  <h2>🏆 BINA LITAR EJEN MATA</h2>
+
+  <p>
+   Selamat datang, Ejen!
+   Bekerjasama untuk membina litar
+   dan melompat melepasi halangan.
+  </p>
+
+  <p>
+   🚧 Pilih Halangan<br>
+   🗺️ Susun Litar<br>
+   🏃 Cabaran Melompat<br>
+   🧠 Kuiz Kerjasama
+  </p>
+
+  <input id="team" placeholder="Nama Pasukan">
+
+  <p>
+   <button onclick="begin()">🚀 MULA MISI</button>
+  </p>
+ </div>
+</section>
+
+<!-- CABARAN 1 -->
+
+<section class="screen" id="choose">
+ <div class="panel">
+
+  <h2>🚧 CABARAN 1</h2>
+  <h2>PILIH 3 HALANGAN</h2>
+
+  <p>
+   Pilih tiga halangan yang sesuai
+   dan selamat untuk latihan melompat.
+  </p>
+
+  <div class="grid" id="items"></div>
+
+  <p id="count">0/3 dipilih</p>
+
+  <button onclick="checkChoice()">
+   ✅ SEMAK PILIHAN
+  </button>
+
+ </div>
+</section>
+
+<!-- CABARAN 2 -->
+
+<section class="screen" id="arrange">
+ <div class="panel">
+
+  <h2>🗺️ CABARAN 2</h2>
+  <h2>SUSUN LITAR</h2>
+
+  <p>
+   Klik halangan untuk menyusunnya
+   daripada mudah kepada lebih mencabar.
+  </p>
+
+  <div class="grid" id="choices"></div>
+
+  <h3>LALUAN PASUKAN</h3>
+
+  <div class="grid" id="slots"></div>
+
+  <button class="secondary" onclick="resetRoute()">
+   🔄 RESET
+  </button>
+
+  <button onclick="checkRoute()">
+   ✅ UJI LITAR
+  </button>
+
+ </div>
+</section>
+
+<!-- CABARAN 3 -->
+
+<section class="screen" id="runner">
+ <div class="panel">
+
+  <h2>🏃 CABARAN 3</h2>
+  <h2>LOMPAT HALANGAN</h2>
+
+  <p>
+   Tekan LOMPAT apabila halangan
+   menghampiri watak Ejen MATA!
+  </p>
+
+  <div id="track">
+   <div id="ground"></div>
+   <div id="agent">🥷</div>
+  </div>
+
+  <p>
+   Lompatan berjaya:
+   <b id="hits">0</b>/4
+  </p>
+
+  <button
+   onclick="jump()"
+   style="background:linear-gradient(#29d978,#128e54)">
+   ⬆️ LOMPAT
+  </button>
+
+  <button
+   onclick="startRun()"
+   id="runButton"
+   class="secondary">
+   ▶️ MULA LARI
+  </button>
+
+  <p id="runMessage"></p>
+
+ </div>
+</section>
+
+<!-- CABARAN 4 -->
+
+<section class="screen" id="quiz">
+ <div class="panel">
+
+  <h2>🧠 CABARAN 4</h2>
+  <h2>KUIZ KERJASAMA</h2>
+
+  <div id="questionArea"></div>
+
+ </div>
+</section>
+
+<!-- KEPUTUSAN AKHIR -->
+
+<section class="screen" id="result">
+ <div class="panel">
+
+  <h1>🏆 MISI SELESAI!</h1>
+
+  <h2 id="teamResult"></h2>
+
+  <div style="font-size:60px">
+   🥇 ⭐ 🏅
+  </div>
+
+  <h1 id="finalScore"></h1>
+
+  <h2 id="rank"></h2>
+
+  <p>
+   Rancang bersama, bergerak bersama,
+   berjaya bersama!
+  </p>
+
+  <button onclick="location.reload()">
+   🔄 MAIN SEMULA
+  </button>
+
+ </div>
+</section>
+
+<p id="feedback"></p>
+
+</main>
+
+<script>
+
+const $ = id => document.getElementById(id);
+
+const data = [
+ {id:0,emoji:"🚧",name:"Kon Rendah",safe:true},
+ {id:1,emoji:"⭕",name:"Gelung Lantai",safe:true},
+ {id:2,emoji:"🚸",name:"Palang Rendah",safe:true},
+ {id:3,emoji:"🧱",name:"Dinding Tinggi",safe:false},
+ {id:4,emoji:"🪑",name:"Kerusi",safe:false},
+ {id:5,emoji:"🕳️",name:"Lubang Dalam",safe:false}
+];
+
+let score=0;
+let selected=[];
+let route=[];
+let quizIndex=0;
+
+let successful=0;
+let running=false;
+let started=0;
+let passed=0;
+
+let jumping=false;
+let jumpY=0;
+let velocity=0;
+let obstacles=[];
+
+let lastTime=0;
+let nextSpawn=0;
+let animation=0;
+
+// KESAN BUNYI
+
+function sound(ok=true){
+ try{
+  const c=new(
+   window.AudioContext ||
+   window.webkitAudioContext
+  )();
+
+  const o=c.createOscillator();
+  const g=c.createGain();
+
+  o.connect(g);
+  g.connect(c.destination);
+
+  o.frequency.value=ok?660:190;
+  o.type=ok?"sine":"square";
+
+  g.gain.setValueAtTime(.12,c.currentTime);
+
+  g.gain.exponentialRampToValueAtTime(
+   .001,c.currentTime+.17
+  );
+
+  o.start();
+  o.stop(c.currentTime+.17);
+
+  o.onended=()=>c.close();
+ }catch(e){}
+}
+
+// PAPARAN
+
+function show(id,percent){
+ document.querySelectorAll(".screen").forEach(
+  x=>x.classList.remove("active")
+ );
+
+ $(id).classList.add("active");
+ $("progressBar").style.width=percent+"%";
+ $("feedback").textContent="";
+
+ window.scrollTo(0,0);
+}
+
+function message(t,ok=true){
+ $("feedback").textContent=t;
+ sound(ok);
+}
+
+function addScore(n){
+ score=Math.min(100,score+n);
+ $("score").textContent=Math.round(score);
+}
+
+// MULA PERMAINAN
+
+function begin(){
+ show("choose",20);
+ renderItems();
+}
+
+// CABARAN 1
+
+function renderItems(){
+ $("items").innerHTML=data.map(o=>`
+  <div class="item
+  ${selected.includes(o.id)?"selected":""}"
+  onclick="toggle(${o.id})">
+
+   <div class="emoji">${o.emoji}</div>
+   <b>${o.name}</b>
+
+  </div>
+ `).join("");
+
+ $("count").textContent=selected.length+"/3 dipilih";
+}
+
+function toggle(id){
+
+ if(selected.includes(id)){
+  selected=selected.filter(x=>x!==id);
+ }
+
+ else if(selected.length<3){
+  selected.push(id);
+ }
+
+ else{
+  message("Pilih tiga sahaja!",false);
+  return;
+ }
+
+ sound();
+ renderItems();
+}
+
+function checkChoice(){
+
+ if(selected.length!==3){
+  message("Pilih 3 halangan dahulu.",false);
+  return;
+ }
+
+ if(!selected.every(i=>data[i].safe)){
+  message(
+   "Ada halangan yang berbahaya. Cuba lagi!",
+   false
+  );
+  return;
+ }
+
+ addScore(20);
+ message("Hebat! +20 markah");
+
+ setTimeout(()=>{
+  show("arrange",40);
+  renderRoute();
+ },700);
+}
+
+// CABARAN 2
+
+function renderRoute(){
+
+ $("choices").innerHTML=selected.map(id=>`
+  <div class="item" onclick="pickRoute(${id})">
+
+   <div class="emoji">${data[id].emoji}</div>
+   ${data[id].name}
+
+  </div>
+ `).join("");
+
+ $("slots").innerHTML=[0,1,2].map(i=>{
+
+  let d=data[route[i]];
+
+  return `
+   <div class="slot">
+    ${d?d.emoji+" "+d.name:"Slot "+(i+1)}
+   </div>
+  `;
+
+ }).join("");
+}
+
+function pickRoute(id){
+
+ if(route.includes(id)||route.length===3)return;
+
+ route.push(id);
+
+ sound();
+ renderRoute();
+}
+
+function resetRoute(){
+ route=[];
+ renderRoute();
+}
+
+function checkRoute(){
+
+ if(route.length!==3){
+  message("Lengkapkan semua slot.",false);
+  return;
+ }
+
+ if(route.join(",")!=="0,1,2"){
+  message(
+   "Cuba susun: kon, gelung, kemudian palang rendah.",
+   false
+  );
+  return;
+ }
+
+ addScore(20);
+ message("Litar berjaya dibina! +20 markah");
+
+ setTimeout(()=>{
+  show("runner",60);
+ },850);
+}
+
+// CABARAN 3
+
+function startRun(){
+
+ if(running)return;
+
+ running=true;
+ started=0;
+ passed=0;
+ successful=0;
+
+ jumpY=0;
+ velocity=0;
+ jumping=false;
+ obstacles=[];
+
+ $("hits").textContent="0";
+ $("runButton").disabled=true;
+
+ $("runMessage").textContent=
+  "Bersedia untuk melompat!";
+
+ lastTime=0;
+ nextSpawn=0;
+
+ animation=requestAnimationFrame(loop);
+}
+
+function jump(){
+
+ if(!running||jumping)return;
+
+ jumping=true;
+ velocity=700;
+
+ sound();
+}
+
+function loop(t){
+
+ if(!running)return;
+
+ if(!lastTime)lastTime=t;
+
+ let dt=Math.min((t-lastTime)/1000,.04);
+ lastTime=t;
+
+ // PERGERAKAN LOMPATAN
+
+ if(jumping){
+
+  jumpY+=velocity*dt;
+  velocity-=1800*dt;
+
+  if(jumpY<=0){
+   jumpY=0;
+   velocity=0;
+   jumping=false;
+  }
+ }
+
+ $("agent").style.transform=
+  `translateY(${-jumpY}px)`;
+
+ // HALANGAN MUNCUL
+
+ if(started<4&&t>=nextSpawn){
+
+  let node=document.createElement("div");
+
+  node.className="hurdle";
+
+  $("track").appendChild(node);
+
+  obstacles.push({
+   node,
+   x:$("track").clientWidth+10,
+   done:false
+  });
+
+  started++;
+  nextSpawn=t+1900;
+ }
+
+ let agentX=$("agent").offsetLeft;
+ let agentW=$("agent").offsetWidth;
+
+ obstacles.forEach(o=>{
+
+  o.x-=240*dt;
+  o.node.style.left=o.x+"px";
+
+  if(
+   !o.done &&
+   o.x<agentX+agentW-8 &&
+   o.x+35>agentX+10
+  ){
+
+   o.done=true;
+   passed++;
+
+   if(jumpY>43){
+
+    successful++;
+
+    $("hits").textContent=successful;
+
+    sound();
+
+    $("runMessage").textContent=
+     "Bagus! Lompatan berjaya!";
+
+   }else{
+
+    sound(false);
+
+    $("runMessage").textContent=
+     "Terlanggar halangan! Teruskan.";
+
+   }
+  }
+ });
+
+ obstacles=obstacles.filter(o=>{
+
+  if(o.x < -50){
+   o.node.remove();
+   return false;
+  }
+
+  return true;
+ });
+
+ // TAMAT CABARAN 3
+
+ if(started===4&&obstacles.length===0){
+
+  running=false;
+
+  addScore(successful*10);
+
+  $("runButton").disabled=false;
+
+  $("runMessage").textContent=
+   `Tamat! ${successful}/4 lompatan berjaya.`;
+
+  setTimeout(()=>{
+   show("quiz",80);
+   renderQuiz();
+  },1200);
+
+  return;
+ }
+
+ animation=requestAnimationFrame(loop);
+}
+
+// BUTANG SPACE UNTUK KOMPUTER
+
+window.addEventListener("keydown",e=>{
+
+ if(e.code==="Space"){
+  e.preventDefault();
+  jump();
+ }
+
+});
+
+// CABARAN 4
+
+const questions=[
+
+ {
+  q:"Apakah tujuan utama kerjasama pasukan?",
+
+  options:[
+   "Bermain seorang diri",
+   "Membantu rakan mencapai matlamat",
+   "Bergaduh"
+  ],
+
+  correct:1
+ },
+
+ {
+  q:"Apakah cara mendarat yang selamat?",
+
+  options:[
+   "Lutut dibengkokkan dan badan seimbang",
+   "Kaki diluruskan sepenuhnya",
+   "Mata ditutup"
+  ],
+
+  correct:0
+ },
+
+ {
+  q:"Apakah tindakan apabila rakan gagal melompat?",
+
+  options:[
+   "Mengejek rakan",
+   "Meninggalkan rakan",
+   "Memberi semangat dan membantu"
+  ],
+
+  correct:2
+ }
+
+];
+
+function renderQuiz(){
+
+ if(quizIndex===questions.length){
+  finish();
+  return;
+ }
+
+ const q=questions[quizIndex];
+
+ $("questionArea").innerHTML=`
+
+  <h3>Soalan ${quizIndex+1}/3</h3>
+
+  <h2>${q.q}</h2>
+
+  ${q.options.map((a,i)=>`
+   <button
+    class="answer"
+    onclick="answer(${i})">
+    ${a}
+   </button>
+  `).join("")}
+
+ `;
+}
+
+function answer(i){
+
+ let right=i===questions[quizIndex].correct;
+
+ if(right){
+
+  // Jumlah maksimum kuiz ialah 20 markah.
+  const marks=[7,7,6];
+
+  addScore(marks[quizIndex]);
+
+  message("Wah, betul! Tahniah!");
+
+ }else{
+
+  message(
+   "Alamak salah! Cuba lagi dalam misi seterusnya.",
+   false
+  );
+
+ }
+
+ quizIndex++;
+
+ setTimeout(renderQuiz,850);
+}
+
+// KEPUTUSAN AKHIR
+
+function finish(){
+
+ score=Math.min(100,Math.round(score));
+
+ $("score").textContent=score;
+
+ show("result",100);
+
+ $("teamResult").textContent=
+  $("team").value||"Pasukan Ejen MATA";
+
+ $("finalScore").textContent=
+  score+"/100 MARKAH";
+
+ if(score>=85){
+
+  $("rank").textContent=
+   "EJEN CEMERLANG ⭐⭐⭐";
+
+ }else if(score>=60){
+
+  $("rank").textContent=
+   "EJEN HEBAT ⭐⭐";
+
+ }else{
+
+  $("rank").textContent=
+   "EJEN PELATIH ⭐";
+
+ }
+
+ sound();
+}
+
+</script>
+
+</body>
+</html>
